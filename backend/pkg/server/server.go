@@ -13,7 +13,9 @@ import (
 	"github.com/RayhanAsauqi/blog-app/internal/http/router"
 	"github.com/RayhanAsauqi/blog-app/internal/repository"
 	"github.com/RayhanAsauqi/blog-app/internal/service"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"gorm.io/gorm"
 )
 
@@ -24,6 +26,20 @@ type Server struct {
 
 func NewServer(cfg *config.Config, db *gorm.DB) *Server {
 	e := echo.New()
+
+	// Load environment variables from .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("Error loading .env file")
+	}
+
+	allowOrigins := os.Getenv("CORS_ALLOWED_ORIGINS")
+
+	e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+		AllowOrigins: []string{allowOrigins},
+		AllowMethods: []string{echo.GET, echo.POST, echo.PUT, echo.DELETE},
+		AllowHeaders: []string{echo.HeaderContentType, echo.HeaderAuthorization},
+	}))
 
 	// Initialize repositories
 	userRepository := repository.NewUserRepository(db)
